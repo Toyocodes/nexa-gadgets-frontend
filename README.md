@@ -107,19 +107,6 @@ The app has two experiences, chosen by the signed-in user's role:
 | Payments        | Paystack Inline JS                                                                  | The standard payment gateway for NGN transactions                                                     |
 | Hosting         | Vercel (frontend), Render (API)                                                     | Zero-config SPA hosting with preview deploys                                                          |
 
-## Architecture
-
-### System overview
-
-```mermaid
-flowchart LR
-    U[Browser] --> SPA[React SPA<br/>Vercel]
-    SPA -- "Axios · httpOnly cookie" --> API[Express REST API<br/>Render]
-    SPA -- "Inline popup" --> PS[Paystack]
-    API --> DB[(MongoDB)]
-    API --> CL[Cloudinary<br/>product images]
-    API -- "verify transaction" --> PS
-```
 
 ### State management
 
@@ -140,53 +127,6 @@ common          → shared feature/banner content
 ```
 
 Components dispatch thunks and read state with `useSelector`. No component calls Axios directly, so every network call lives in [`src/store`](src/store).
-
-### Authentication and route protection
-
-Auth uses an **httpOnly cookie** set by the API. The SPA never reads or stores the token itself. On boot, `App` dispatches a single `checkAuth()` call, and every protected route is wrapped in one guard component, [`CheckAuth`](src/components/common/check-auth.jsx):
-
-```mermaid
-flowchart TD
-    A[Route requested] --> B{Session check<br/>still running?}
-    B -- yes --> S[Show spinner]
-    B -- no --> C{Authenticated?}
-    C -- no --> D{Public auth page?<br/>login / register / reset}
-    D -- yes --> R[Render]
-    D -- no --> L[Redirect → /auth/login]
-    C -- yes --> E{On login/register?}
-    E -- yes --> F[Redirect by role:<br/>admin → /admin/dashboard<br/>user → /shop/home]
-    E -- no --> G{Customer on /admin?}
-    G -- yes --> X[Redirect → /unauth-page]
-    G -- no --> H{Admin on /shop?}
-    H -- yes --> Y[Redirect → /admin/dashboard]
-    H -- no --> R
-```
-
-Public storefront pages (home, listing, product, FAQ) are **not** wrapped in the guard. They render straight away, without waiting for the session check, so first paint isn't blocked by a network round-trip.
-
-### Payment flow
-
-```mermaid
-sequenceDiagram
-    participant C as Customer
-    participant SPA as React app
-    participant API as Express API
-    participant PS as Paystack
-
-    C->>SPA: Click "Checkout"
-    SPA->>API: POST /shop/order/create (cart, address, total)
-    API-->>SPA: orderId
-    SPA->>SPA: Store orderId in sessionStorage
-    SPA->>PS: Open inline popup (amount in kobo, reference)
-    C->>PS: Pay
-    PS-->>SPA: callback(reference) → /shop/paystack-return
-    SPA->>API: PUT /shop/order/verify { reference, orderId }
-    API->>PS: Verify transaction (secret key, server-side)
-    API-->>SPA: Order confirmed, stock updated, cart cleared
-    SPA->>C: /shop/payment-success
-```
-
-The frontend only holds Paystack's **public** key. The order is marked paid only after the API verifies the transaction with Paystack using the secret key, so a tampered client callback can't confirm an order.
 
 ## Project structure
 
