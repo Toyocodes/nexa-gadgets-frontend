@@ -48,6 +48,8 @@ export default function ListingPage() {
   const total = data?.pages[0]?.pagination?.total ?? products.length;
   const title = listingTitle(filters);
   const chips = activeChips(filters, update);
+  // The search term is shown in the heading and isn't removed by "Clear all".
+  const filterCount = chips.filter((c) => c.key !== "search").length;
 
   return (
     <div className="container-page pt-6 pb-20">
@@ -74,7 +76,7 @@ export default function ListingPage() {
             filters={filters}
             update={update}
             clearAll={clearAll}
-            count={chips.length}
+            count={filterCount}
           />
           <label className="flex items-center gap-2.5 text-sm text-ink-2">
             <span className="hidden sm:inline">Sort by</span>
@@ -129,12 +131,26 @@ export default function ListingPage() {
           ) : !isLoading && products.length === 0 ? (
             <EmptyState
               icon={SearchX}
-              title="No products match these filters"
-              body="Try removing a filter or widening the price range."
+              title={
+                filters.q && filterCount === 0
+                  ? `No results for “${filters.q}”`
+                  : "No products match these filters"
+              }
+              body={
+                filters.q && filterCount === 0
+                  ? "Check the spelling, or try a broader term like “phone” or “Oraimo”."
+                  : "Try removing a filter or widening the price range."
+              }
               action={
-                <Button variant="outline" onClick={clearAll}>
-                  Clear all filters
-                </Button>
+                filters.q && filterCount === 0 ? (
+                  <Button asChild variant="outline">
+                    <Link to={paths.products()}>Browse all products</Link>
+                  </Button>
+                ) : (
+                  <Button variant="outline" onClick={clearAll}>
+                    Clear all filters
+                  </Button>
+                )
               }
             />
           ) : (
@@ -178,6 +194,7 @@ export default function ListingPage() {
 
 function activeChips(f: ListingFilters, update: (p: Partial<ListingFilters>) => void) {
   const chips: { key: string; label: string; remove: () => void }[] = [];
+  if (f.q) chips.push({ key: "search", label: `“${f.q}”`, remove: () => update({ q: undefined }) });
   if (f.inStock)
     chips.push({ key: "stock", label: "In stock only", remove: () => update({ inStock: false }) });
   if (f.onSale)

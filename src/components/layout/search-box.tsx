@@ -17,7 +17,14 @@ export function SearchBox({
   shortcut,
 }: SearchBoxProps) {
   const [params] = useSearchParams();
-  const [value, setValue] = useState(params.get("q") ?? "");
+  const q = params.get("q") ?? "";
+  const [value, setValue] = useState(q);
+  // Keep the box in step when the term changes elsewhere (chip removed, back button).
+  const [syncedQ, setSyncedQ] = useState(q);
+  if (q !== syncedQ) {
+    setSyncedQ(q);
+    setValue(q);
+  }
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -41,8 +48,8 @@ export function SearchBox({
       role="search"
       onSubmit={(e) => {
         e.preventDefault();
-        const q = value.trim();
-        if (q) navigate(paths.search(q));
+        const term = value.trim();
+        if (term) navigate(paths.search(term));
       }}
       className={cn(
         "flex h-11 items-center gap-2.5 rounded-md bg-muted px-3.5 text-muted-foreground focus-within:ring-[3px] focus-within:ring-primary/15",

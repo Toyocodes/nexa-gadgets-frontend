@@ -42,7 +42,7 @@ export function ProductCard({ product, variant = "full", priority }: ProductCard
           />
         </Link>
         {discount && (
-          <span className="absolute top-2.5 left-2.5 rounded-full bg-foreground px-2 py-1 text-[11px] font-semibold text-white md:top-3.5 md:left-3.5 md:px-2.5 md:py-[5px] md:text-xs">
+          <span className="absolute top-2.5 left-2.5 rounded-full bg-night px-2 py-1 text-[11px] font-semibold text-white md:top-3.5 md:left-3.5 md:px-2.5 md:py-[5px] md:text-xs">
             {discount}
           </span>
         )}

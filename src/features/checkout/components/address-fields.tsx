@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import type { AddressFormValues } from "../address-schema";
 
-/** Street, city, postal code, phone (+234) and notes — used at checkout and in Account › Addresses. */
+/** Label, street, city, postal code, phone (+234) and notes — used at checkout and in Account › Addresses. */
 export function AddressFields({
   form,
   showNotes = true,
@@ -21,6 +21,23 @@ export function AddressFields({
 
   return (
     <div className="flex flex-col gap-3.5">
+      <Field
+        id={id("label")}
+        label={
+          <>
+            Label <span className="font-normal text-muted-foreground">Optional</span>
+          </>
+        }
+        error={e.label?.message}
+      >
+        <Input
+          {...register("label")}
+          {...fieldAria(id("label"), e.label?.message)}
+          autoComplete="off"
+          placeholder="Home, Office…"
+          maxLength={30}
+        />
+      </Field>
       <Field id={id("address")} label="Street address" error={e.address?.message}>
         <Input
           {...register("address")}

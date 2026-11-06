@@ -8,6 +8,7 @@ const nationalNumber = z
   .refine((v) => /^0?[789]\d{9}$/.test(v), "Enter a Nigerian mobile number, like 801 234 5678");
 
 export const addressSchema = z.object({
+  label: z.string().trim().max(30, "Keep the label under 30 characters").optional(),
   address: z.string().trim().min(3, "Enter the street address"),
   city: z.string().trim().min(2, "Enter the city"),
   pincode: z.string().trim().max(12).optional(),
@@ -20,6 +21,7 @@ export type AddressFormValues = z.input<typeof addressSchema>;
 /** Form values → API body. The API stores the full international number. */
 export function toAddressInput(values: z.output<typeof addressSchema>): AddressInput {
   return {
+    label: values.label ?? "",
     address: values.address,
     city: values.city,
     pincode: values.pincode ?? "",
@@ -31,6 +33,7 @@ export function toAddressInput(values: z.output<typeof addressSchema>): AddressI
 /** API record → form values (strip +234 so it shows after the fixed prefix). */
 export function toAddressForm(a?: Address): AddressFormValues {
   return {
+    label: a?.label ?? "",
     address: a?.address ?? "",
     city: a?.city ?? "Lagos",
     pincode: a?.pincode ?? "",
@@ -38,6 +41,9 @@ export function toAddressForm(a?: Address): AddressFormValues {
     notes: a?.notes ?? "",
   };
 }
+
+/** Names the API can return in an error's `field` that this form has inputs for. */
+export const ADDRESS_FIELDS = ["label", "address", "city", "pincode", "phone", "notes"] as const;
 
 /** "+2348012345678" → "+234 801 234 5678" for display. */
 export function formatPhone(phone: string) {

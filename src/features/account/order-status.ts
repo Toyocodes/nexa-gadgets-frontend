@@ -6,6 +6,8 @@ export type Tone = "info" | "success" | "warning" | "danger";
 export const isPickup = (o: Order) => o.deliveryMethod?.type === "pickup";
 export const isUnpaid = (o: Order) => o.paymentStatus !== "paid" && o.orderStatus !== "rejected";
 export const isFinished = (o: Order) => o.orderStatus === "delivered";
+/** Older orders kept their notes on the address snapshot. Empty means "none for this order". */
+export const orderNotes = (o: Order) => o.deliveryNotes ?? o.addressInfo?.notes ?? "";
 
 export function trackerSteps(o: Order) {
   return isPickup(o)

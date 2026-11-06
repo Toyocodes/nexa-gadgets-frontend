@@ -46,7 +46,7 @@ export function ProductGallery({ images, title, category, mobileOverlay }: Galle
                 aria-pressed={i === active}
                 onClick={() => setActive(i)}
                 className={cn(
-                  "aspect-square overflow-hidden rounded-[14px] border-2 bg-tile",
+                  "aspect-square overflow-hidden rounded-[14px] border-2 bg-photo",
                   i === active ? "border-foreground" : "border-transparent hover:border-input",
                 )}
               >

@@ -48,7 +48,7 @@ Version 2 is a complete rewrite: React 19 + TypeScript, a light "studio" design 
 
 | Role         | Can do                                                                                          |
 | ------------ | ----------------------------------------------------------------------------------------------- |
-| **Guest**    | Browse, filter, search and read reviews. Tapping "+" or ♥ asks them to sign in, then finishes the action. |
+| **Guest**    | Browse, filter, search and read reviews. Keep a cart in this browser, which moves to their account when they sign in. Tapping ♥ asks them to sign in, then finishes the action. |
 | **Customer** | Cart, wishlist, saved addresses, checkout, order tracking, reviews of paid purchases, account settings |
 | **Admin**    | Sales dashboard, product catalogue with photo gallery & specs, order fulfilment, delivery & pickup fees |
 
@@ -57,7 +57,8 @@ Version 2 is a complete rewrite: React 19 + TypeScript, a light "studio" design 
 ### Storefront
 
 - **Category-led navigation:** Phones, Laptops, Headphones, Earbuds, Smartwatches, Power banks and Deals, plus one search bar (press <kbd>/</kbd> to focus it).
-- **Listing:** filters for category, brand, price (presets and min/max), in stock and on sale. Sort by newest, price or rating. Removable filter chips and "Load more" pagination ("Showing 12 of 14"). **All filter state lives in the URL**, so views are shareable and the back button works.
+- **Listing:** filters for category, brand, price (presets and min/max), in stock and on sale. Sort by newest, price or rating. Removable filter chips and "Load more" pagination ("Showing 12 of 14"). Search results are the same page, so they can be filtered and sorted too. **All filter state lives in the URL**, so views are shareable and the back button works.
+- **Light and dark themes:** choose either or follow the device, from the footer. The theme is applied before first paint, so there's no white flash, and product photos keep a light tile so white-background images still blend in.
 - **Honest product cards:** stars only when a product has reviews (never "★ 0.0"), "Only N left" in amber, a sale badge only for real discounts, and a round "+" to add to cart.
 - **Product page:** photo gallery (a swipe carousel on phones), spec chips and a spec table, one stock line, live delivery fees, reviews with a star breakdown, and "You might also like".
 - **Cart drawer:** quantity steppers with optimistic updates, "You save ₦X", and "Delivery: chosen at checkout".
@@ -108,10 +109,10 @@ Version 2 is a complete rewrite: React 19 + TypeScript, a light "studio" design 
 | Language      | **TypeScript** (strict, `noUncheckedIndexedAccess`)                     | API shapes in [`src/types/api.ts`](src/types/api.ts) are checked end to end                       |
 | Build         | **Vite 8** (Rolldown)                                                    | Fast dev server; route-level code splitting                                                      |
 | Server state  | **RTK Query** (Redux Toolkit 2)                                          | Caching, tag invalidation, optimistic updates, infinite queries for "Load more"                    |
-| Client state  | Two tiny Redux slices                                                   | Only what the server doesn't know: who's signed in, and whether the cart drawer is open          |
+| Client state  | Three small Redux slices                                                | Only what the server doesn't know: who's signed in, the cart drawer, and a guest's cart          |
 | Routing       | **React Router 7** data router                                           | Lazy routes, layout routes for guards, route `handle`s for per-page layout                        |
 | Styling       | **Tailwind CSS 4** + **shadcn/ui** (Radix)                               | Design tokens as CSS variables; accessible primitives restyled to the design                     |
-| Forms         | **react-hook-form** + **zod**                                            | Schema validation, inline field errors, `useWatch` for live password strength                    |
+| Forms         | **react-hook-form** + **zod**                                            | Schema validation, inline field errors (including the API's `field` key), `useWatch` for live password strength |
 | Charts        | Recharts                                                                | Loaded only in the admin dashboard chunk                                                          |
 | Payments      | Paystack Inline, `channels: ["bank_transfer"]`                           | Script loaded on demand; the server verifies every payment                                       |
 | Tests         | **Vitest** + Testing Library                                            | Business rules (pricing, trackers, filters, validation) are unit-tested                           |
@@ -125,8 +126,8 @@ Code is grouped by **what it does**, not by file type. Each feature owns its API
 
 ```
 features/auth      → session slice, auth endpoints, route guards, sign-in/up, magic link, reset
-features/catalog   → products, search, reviews · home, listing, product pages
-features/cart      → cart endpoints (optimistic), drawer, useCart / useAddToCart
+features/catalog   → products, search, reviews · home, listing (and search results), product pages
+features/cart      → cart endpoints (optimistic), guest cart + merge, drawer, useCart / useAddToCart
 features/wishlist  → wishlist endpoints, useWishlist
 features/checkout  → delivery options, addresses, orders, Paystack return
 features/account   → orders, order details, wishlist, addresses, account details
@@ -147,13 +148,15 @@ One RTK Query API ([`src/lib/api/base-api.ts`](src/lib/api/base-api.ts)) holds a
 
 The session is an **httpOnly cookie**; the app never reads or stores a token. One `check-auth` call runs on load, and only guarded routes wait for it, so public pages render immediately. Three layout routes do the guarding: `RequireAuth`, `RequireAdmin` and `GuestOnly`.
 
-Guests who tap "+" or ♥ have that intent saved, are sent to sign in, and the action completes when they return ([`pending-intent.ts`](src/lib/pending-intent.ts)).
+**Guest cart:** guests keep only product ids and quantities in `localStorage`, and prices are read live from the API, so a stale price can't appear. After sign-in, [`useMergeGuestCart`](src/features/cart/use-merge-guest-cart.ts) sends them to `POST /shop/cart/merge`, which adds them to the account cart and caps them at current stock. Items stay stored until the API confirms, so a failed merge loses nothing.
+
+Guests who tap ♥ have that intent saved, are sent to sign in, and the action completes when they return ([`pending-intent.ts`](src/lib/pending-intent.ts)).
 
 ### Checkout & payment
 
 ```
 choose pickup / zone  →  (delivery) save or pick an address
-→ POST /shop/order/create { deliveryOptionId, addressInfo.addressId }
+→ POST /shop/order/create { deliveryOptionId, addressInfo.addressId, notes }
 → server returns totalAmount   ← the browser never decides the price
 → Paystack popup, bank transfer only, amount = totalAmount × 100 (kobo)
 → /checkout/payment?reference=…  →  PUT /shop/order/verify  →  confirmation
@@ -167,9 +170,9 @@ If the customer closes Paystack and tries again, the same order is reused instea
 | Area | Endpoints |
 |---|---|
 | Auth | `POST /auth/register` `/login` `/logout` `/forgot-password` `/magic-link` `/magic-link/verify` · `PUT /auth/reset-password/:token` `/auth/me` `/auth/change-password` · `GET /auth/check-auth` `/auth/me` |
-| Catalog | `GET /shop/products/get` (filters, sort, `page`/`limit`) · `GET /shop/products/get/:id` · `GET /shop/search/:keyword` |
+| Catalog | `GET /shop/products/get` (`q`, `ids`, filters, sort, `page`/`limit`) · `GET /shop/products/get/:id` |
 | Reviews | `GET /shop/review/:productId` · `POST /shop/review/add` |
-| Cart | `GET /shop/cart/get/:userId` · `POST /shop/cart/add` · `PUT /shop/cart/update-cart` · `DELETE /shop/cart/:userId/:productId` |
+| Cart | `GET /shop/cart/get/:userId` · `POST /shop/cart/add` · `POST /shop/cart/merge` · `PUT /shop/cart/update-cart` · `DELETE /shop/cart/:userId/:productId` |
 | Wishlist | `GET /shop/wishlist/get/:userId` · `POST /shop/wishlist/add` · `DELETE /shop/wishlist/delete/:userId/:productId` |
 | Addresses | `GET /shop/address/get/:userId` · `POST /shop/address/add` · `PUT /shop/address/update/:userId/:addressId` · `DELETE /shop/address/delete/:userId/:addressId` |
 | Delivery | `GET /shop/delivery-options` |
@@ -234,39 +237,17 @@ The live demo uses Paystack **test mode**, so no real money moves. Create an acc
 
 ## Testing & quality
 
-- **Unit tests** cover the rules most likely to break silently:
-  - pricing (what's charged vs what counts as a discount)
-  - order trackers for pickup vs delivery, including legacy statuses
-  - listing filters → API query strings and page titles
-  - spec chips, phone-number validation and normalisation
-  - mapping API error messages to form fields
-  - open-redirect protection
 - **Strict TypeScript** with `noUncheckedIndexedAccess`; the build fails on type errors.
 - **ESLint** with the React Compiler-aware hooks rules (e.g. no state-syncing effects; defaults are derived during render instead).
 - **Accessibility:** real buttons and labels, `aria-invalid`/`aria-describedby` on fields, keyboard-operable dialogs, menus and gallery thumbnails, a skip link, and 44px touch targets.
 
 ## Deployment
 
-Deployed on **Vercel**. [`vercel.json`](vercel.json) rewrites every path to `index.html` so deep links like `/products/:id` survive a refresh. Set the `VITE_*` variables in Vercel; they're inlined at build time, so changing one needs a redeploy. Old `/shop/*` URLs redirect to their new homes.
-
-## Engineering decisions
-
-- **Server state in RTK Query, not hand-written thunks.** The first version had 11 slices of `createAsyncThunk` + loading flags. RTK Query removes that boilerplate and adds caching, deduplication and optimistic updates. Redux stays for the two bits of genuinely client-side state.
-- **Never trust the browser with money.** The order total comes from `POST /order/create`, and Paystack is charged that amount. The popup only offers bank transfer, because the server rejects every other channel.
-- **Fees come from the API.** Checkout, the product page and the Delivery help page all read `/shop/delivery-options`, so an admin's fee change shows up everywhere without a deploy.
-- **Show only what's true.** No "free delivery", no "★ 0.0", no discount badge when a sale price is *higher* than the price, and dashboard revenue counts paid orders only.
-- **White product photos on a grey tile.** `mix-blend-mode: multiply` turns supplier photos' white backgrounds into the tile colour, so cards don't become bright boxes.
-- **Defaults are derived, not synced.** Checkout's default delivery option and address are computed during render from server data plus the user's choice, not copied into state by effects.
-- **Lazy everything admin.** Each route is its own chunk; Recharts only ships with the admin dashboard.
+Deployed on **Vercel**. [`vercel.json`](vercel.json)
 
 ## Known limitations & roadmap
 
-- [ ] **Field-level API errors:** the API returns one `message`, so forms map it to a field by wording. A `field` key in error responses would make this exact.
-- [ ] **Per-order delivery notes and address labels** ("Home", "Office") need backend fields; today notes are saved on the address.
-- [ ] **Guest cart:** guests are sent to sign in before adding to cart. A local cart merged on login needs a merge endpoint.
-- [ ] **Search** uses a separate endpoint without filters or pagination; a `q` parameter on the products endpoint would unify it with the listing.
 - [ ] **End-to-end tests** (Playwright) for checkout with a mocked Paystack.
-- [ ] **Dark mode:** colours are already CSS variables; it needs a dark token set.
 - [ ] **CI:** GitHub Actions running lint, typecheck, tests and build on every PR.
 
 ## License

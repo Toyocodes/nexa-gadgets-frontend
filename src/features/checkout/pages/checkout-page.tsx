@@ -15,12 +15,13 @@ import { RadioGroup } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { selectUser } from "@/features/auth/auth-slice";
 import { useCart } from "@/features/cart/use-cart";
-import { getErrorMessage } from "@/lib/api/errors";
+import { getErrorMessage, serverErrorField } from "@/lib/api/errors";
 import { effectivePrice, formatNaira, pluralize } from "@/lib/format";
 import { PaymentCancelledError, payByTransfer } from "@/lib/paystack";
 import { cn } from "@/lib/utils";
 import type { Address, CartItem, DeliveryOption } from "@/types/api";
 import {
+  ADDRESS_FIELDS,
   addressSchema,
   formatPhone,
   toAddressForm,
@@ -52,7 +53,7 @@ export default function CheckoutPage() {
   const [chosenOptionId, setOptionId] = useState<string>();
   const [chosenAddressId, setAddressId] = useState<string>();
   const [chosenMode, setMode] = useState<AddressMode>({ kind: "saved" });
-  // Notes edits per saved address; untouched addresses show their stored notes.
+  // This order's notes per saved address; untouched addresses start from their stored notes.
   const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
   const [step, setStep] = useState<0 | 1>(0);
   const [busy, setBusy] = useState(false);
@@ -114,37 +115,31 @@ export default function CheckoutPage() {
     );
   }
 
-  /** Resolve the address to deliver to, saving a new or edited one first. */
-  async function resolveAddressId(): Promise<string | null> {
+  /** Resolve the address and notes to deliver with, saving a new or edited address first. */
+  async function resolveDelivery(): Promise<{ addressId: string; notes: string } | null> {
     if (!needsAddress) return null;
     if (mode.kind !== "saved") {
-      let values: ReturnType<typeof toAddressInput> | null = null;
+      let parsed: ReturnType<typeof toAddressInput> | null = null;
       await form.handleSubmit((v) => {
-        values = toAddressInput(addressSchema.parse(v));
+        parsed = toAddressInput(addressSchema.parse(v));
       })();
+      const values = parsed as ReturnType<typeof toAddressInput> | null;
       if (!values) throw new Error("Please check the delivery address");
+      const notes = values.notes ?? "";
       if (mode.kind === "edit") {
         await updateAddress({
           userId: user.id,
           addressId: mode.address._id,
           body: values,
         }).unwrap();
-        return mode.address._id;
+        return { addressId: mode.address._id, notes };
       }
       const res = await addAddress(values).unwrap();
       setAddressId(res.data._id);
-      return res.data._id;
+      return { addressId: res.data._id, notes };
     }
     if (!selectedAddress) throw new Error("Please select a delivery address");
-    // Notes live on the saved address, so keep them in sync before ordering.
-    if (notes.trim() !== (selectedAddress.notes ?? "")) {
-      await updateAddress({
-        userId: user.id,
-        addressId: selectedAddress._id,
-        body: { notes: notes.trim() },
-      }).unwrap();
-    }
-    return selectedAddress._id;
+    return { addressId: selectedAddress._id, notes: notes.trim() };
   }
 
   async function pay() {
@@ -152,15 +147,16 @@ export default function CheckoutPage() {
     setError(null);
     setBusy(true);
     try {
-      const resolvedAddress = await resolveAddressId();
+      const delivery = await resolveDelivery();
       if (mode.kind !== "saved") setMode({ kind: "saved" });
 
-      const key = `${option._id}|${resolvedAddress ?? ""}|${cartKey}`;
+      const key = JSON.stringify([option._id, delivery, cartKey]);
       let order = pendingOrder.current?.key === key ? pendingOrder.current : null;
       if (!order) {
         const res = await createOrder({
           deliveryOptionId: option._id,
-          addressId: resolvedAddress ?? undefined,
+          addressId: delivery?.addressId,
+          notes: delivery?.notes,
         }).unwrap();
         order = { key, orderId: res.orderId, totalAmount: res.totalAmount };
         pendingOrder.current = order;
@@ -186,6 +182,8 @@ export default function CheckoutPage() {
       } else {
         const message =
           err instanceof Error && !("status" in err) ? err.message : getErrorMessage(err);
+        const field = mode.kind !== "saved" ? serverErrorField(err, ADDRESS_FIELDS) : null;
+        if (field) form.setError(field, { message });
         setError(message);
         toast.error(message);
       }
@@ -274,7 +272,9 @@ export default function CheckoutPage() {
                           className="md:p-[18px]"
                         >
                           <span className="flex justify-between gap-2">
-                            <span className="text-[15px] font-semibold">{a.address}</span>
+                            <span className="text-[15px] font-semibold">
+                              {a.label || a.address}
+                            </span>
                             {selected && mode.kind === "saved" && (
                               <button
                                 type="button"
@@ -290,6 +290,12 @@ export default function CheckoutPage() {
                             )}
                           </span>
                           <span className="text-sm leading-normal text-ink-2">
+                            {a.label && (
+                              <>
+                                {a.address}
+                                <br />
+                              </>
+                            )}
                             {[a.city, a.pincode].filter(Boolean).join(", ")}
                             <span className="md:hidden"> · </span>
                             <br className="hidden md:block" />
@@ -321,7 +327,7 @@ export default function CheckoutPage() {
                     {selectedAddress && (
                       <label className="flex flex-col gap-1.5 text-sm font-medium">
                         <span>
-                          Delivery notes{" "}
+                          Delivery notes for this order{" "}
                           <span className="font-normal text-muted-foreground">
                             Optional — gate code, landmark, best time to call
                           </span>
@@ -513,7 +519,7 @@ function SummaryLines({ items }: { items: CartItem[] }) {
                 iconStroke={1.2}
                 className="size-14 rounded-md"
               />
-              <span className="absolute -top-1.5 -right-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-foreground px-1 text-[11px] font-semibold text-white">
+              <span className="absolute -top-1.5 -right-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-foreground px-1 text-[11px] font-semibold text-ink-foreground">
                 {item.quantity}
               </span>
             </span>

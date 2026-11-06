@@ -50,10 +50,8 @@ const routes: RouteObject[] = [
             handle: handle({ mobileHeader: "back", hideTabBar: true }),
             lazy: page(() => import("@/features/catalog/pages/product-page")),
           },
-          {
-            path: "search",
-            lazy: page(() => import("@/features/catalog/pages/search-page")),
-          },
+          // Search now lives on the listing page; old links keep working.
+          { path: "search", element: <LegacyRedirect to={() => paths.products()} /> },
           { path: "help", lazy: page(() => import("@/features/content/pages/faq-page")) },
           {
             path: "help/delivery",

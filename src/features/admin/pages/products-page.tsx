@@ -183,7 +183,7 @@ export default function AdminProductsPage() {
             <AlertDialogCancel>Keep it</AlertDialogCancel>
             <AlertDialogAction
               disabled={removing}
-              className="bg-destructive text-white hover:bg-destructive/90"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() =>
                 deleting &&
                 remove(deleting._id)

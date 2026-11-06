@@ -10,7 +10,7 @@ import { useGetOrderQuery } from "@/features/checkout/checkout-api";
 import { formatPhone } from "@/features/checkout/address-schema";
 import { formatDate, formatNaira, shortId } from "@/lib/format";
 import { OrderTracker, StatusPill } from "../components/order-parts";
-import { isPickup, isUnpaid } from "../order-status";
+import { isPickup, isUnpaid, orderNotes } from "../order-status";
 import { useBuyAgain, useCompletePayment } from "../use-order-actions";
 
 export default function OrderPage() {
@@ -37,6 +37,7 @@ export default function OrderPage() {
   const pickup = isPickup(order);
   const unpaid = isUnpaid(order);
   const subtotal = order.subtotal ?? order.totalAmount - (order.deliveryFee ?? 0);
+  const notes = orderNotes(order);
 
   return (
     <>
@@ -124,6 +125,12 @@ export default function OrderPage() {
             order.deliveryMethod?.description || "Collect from our store after paying online."
           ) : order.addressInfo?.address ? (
             <>
+              {order.addressInfo.label && (
+                <>
+                  <span className="font-medium text-foreground">{order.addressInfo.label}</span>
+                  <br />
+                </>
+              )}
               {order.addressInfo.address}, {order.addressInfo.city}
               {order.addressInfo.phone && (
                 <>
@@ -131,10 +138,10 @@ export default function OrderPage() {
                   {formatPhone(order.addressInfo.phone)}
                 </>
               )}
-              {order.addressInfo.notes && (
+              {notes && (
                 <>
                   <br />
-                  <span className="text-muted-foreground">Notes: {order.addressInfo.notes}</span>
+                  <span className="text-muted-foreground">Notes: {notes}</span>
                 </>
               )}
             </>

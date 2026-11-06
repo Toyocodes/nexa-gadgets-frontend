@@ -28,7 +28,7 @@ export default function ReturnsPage() {
             key={s.title}
             className="flex gap-4 rounded-2xl border border-border bg-card p-5 md:p-6"
           >
-            <span className="flex size-8 flex-none items-center justify-center rounded-full bg-foreground font-mono text-sm font-semibold text-white">
+            <span className="flex size-8 flex-none items-center justify-center rounded-full bg-foreground font-mono text-sm font-semibold text-ink-foreground">
               {i + 1}
             </span>
             <div>

@@ -18,6 +18,7 @@ const num = (v: string | null) => {
 };
 
 export interface ListingFilters {
+  q: string;
   category: string[];
   brand: string[];
   minPrice?: number;
@@ -37,6 +38,7 @@ export function useListingFilters() {
 
   const filters: ListingFilters = useMemo(
     () => ({
+      q: (params.get("q") ?? "").trim(),
       category: list(params.get("category")),
       brand: list(params.get("brand")),
       minPrice: num(params.get("min")),
@@ -50,6 +52,7 @@ export function useListingFilters() {
 
   const query: Omit<ProductQuery, "page"> = useMemo(
     () => ({
+      q: filters.q,
       category: filters.category,
       brand: filters.brand,
       minPrice: filters.minPrice,
@@ -69,6 +72,7 @@ export function useListingFilters() {
           const next = new URLSearchParams(prev);
           const set = (key: string, value: string | undefined) =>
             value ? next.set(key, value) : next.delete(key);
+          if ("q" in patch) set("q", patch.q);
           if ("category" in patch) set("category", patch.category?.join(","));
           if ("brand" in patch) set("brand", patch.brand?.join(","));
           if ("minPrice" in patch)
@@ -86,13 +90,17 @@ export function useListingFilters() {
     [setParams],
   );
 
+  // Clearing filters keeps the search term and sort: they aren't filters.
   const clearAll = useCallback(
     () =>
-      setParams(filters.sort === "featured" ? {} : { sort: filters.sort }, {
-        replace: true,
-        preventScrollReset: true,
-      }),
-    [setParams, filters.sort],
+      setParams(
+        {
+          ...(filters.q && { q: filters.q }),
+          ...(filters.sort !== "featured" && { sort: filters.sort }),
+        },
+        { replace: true, preventScrollReset: true },
+      ),
+    [setParams, filters.q, filters.sort],
   );
 
   return { filters, query, update, clearAll };
@@ -100,6 +108,7 @@ export function useListingFilters() {
 
 /** Page heading for the current filters: "Phones", "Deals", "Apple", "All products"… */
 export function listingTitle(f: ListingFilters) {
+  if (f.q) return `Results for “${f.q}”`;
   if (f.onSale) return "Deals";
   const isAudio =
     f.category.length === AUDIO_CATEGORIES.length &&

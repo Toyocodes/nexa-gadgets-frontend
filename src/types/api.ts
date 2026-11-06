@@ -32,6 +32,8 @@ export interface ApiEnvelope<T> {
 export interface AuthResponse {
   success: boolean;
   message: string;
+  /** The input the error is about, when it's about one. */
+  field?: string;
   user?: SessionUser;
 }
 
@@ -83,6 +85,8 @@ export type SortKey =
   "price-lowtohigh" | "price-hightolow" | "title-atoz" | "title-ztoa" | "newest" | "rating";
 
 export interface ProductQuery {
+  q?: string;
+  ids?: string[];
   category?: string[];
   brand?: string[];
   minPrice?: number;
@@ -121,6 +125,19 @@ export interface Cart {
   items: CartItem[];
 }
 
+/** A line that ended up with less than the guest asked for. Title is null if the product is gone. */
+export interface CartAdjustment {
+  productId: string;
+  title: string | null;
+  quantity: number;
+}
+
+export interface MergeCartResponse {
+  success: boolean;
+  data: Cart;
+  adjustments: CartAdjustment[];
+}
+
 export interface WishlistEntry {
   _id: string;
   product: Pick<
@@ -134,6 +151,7 @@ export interface WishlistEntry {
 export interface Address {
   _id: string;
   userId: string;
+  label?: string;
   address: string;
   city: string;
   phone: string;
@@ -142,7 +160,7 @@ export interface Address {
 }
 
 export type AddressInput = Pick<Address, "address" | "city" | "phone"> &
-  Partial<Pick<Address, "pincode" | "notes">>;
+  Partial<Pick<Address, "label" | "pincode" | "notes">>;
 
 export type DeliveryType = "pickup" | "delivery";
 
@@ -184,6 +202,8 @@ export interface Order {
   userId: string;
   cartItems: OrderItem[];
   addressInfo?: Partial<Omit<Address, "_id" | "userId">> & { addressId?: string };
+  /** Missing on orders placed before per-order notes; use orderNotes(). */
+  deliveryNotes?: string;
   deliveryMethod?: {
     optionId: string;
     name: string;

@@ -55,12 +55,12 @@ export const checkoutApi = baseApi.injectEndpoints({
      */
     createOrder: build.mutation<
       CreateOrderResponse,
-      { deliveryOptionId: string; addressId?: string }
+      { deliveryOptionId: string; addressId?: string; notes?: string }
     >({
-      query: ({ deliveryOptionId, addressId }) => ({
+      query: ({ deliveryOptionId, addressId, notes }) => ({
         url: "/shop/order/create",
         method: "POST",
-        body: { deliveryOptionId, addressInfo: addressId ? { addressId } : undefined },
+        body: { deliveryOptionId, addressInfo: addressId ? { addressId } : undefined, notes },
       }),
       invalidatesTags: ["Order"],
     }),
