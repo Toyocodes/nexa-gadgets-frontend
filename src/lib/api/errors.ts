@@ -28,6 +28,19 @@ export function getErrorMessage(
   return err.message || fallback;
 }
 
+/**
+ * The input an API error is about, when it's one the form has. `source` is a
+ * thrown error, or a 200 { success: false } body (login and register use those).
+ */
+export function serverErrorField<F extends string>(
+  source: unknown,
+  fields: readonly F[],
+): F | null {
+  const body = isFetchError(source) ? source.data : source;
+  const field = (body as { field?: unknown } | null | undefined)?.field;
+  return fields.find((f) => f === field) ?? null;
+}
+
 export function errorStatus(error: unknown) {
   return isFetchError(error) ? error.status : undefined;
 }

@@ -80,7 +80,7 @@ export function FiltersPanel({ filters, update, clearAll }: FiltersPanelProps) {
                 className={cn(
                   "h-9 rounded-full border px-3 text-[13px] transition-colors",
                   active
-                    ? "border-foreground bg-foreground text-white"
+                    ? "border-foreground bg-foreground text-ink-foreground"
                     : "border-input bg-card text-foreground hover:border-foreground",
                 )}
               >

@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { StatusPill } from "@/features/account/components/order-parts";
-import { isPickup, isUnpaid } from "@/features/account/order-status";
+import { isPickup, isUnpaid, orderNotes } from "@/features/account/order-status";
 import { formatPhone } from "@/features/checkout/address-schema";
 import { getErrorMessage } from "@/lib/api/errors";
 import { formatDate, formatNaira, shortId } from "@/lib/format";
@@ -90,12 +90,17 @@ export default function AdminOrdersPage() {
               className={cn(
                 "flex h-9 flex-none items-center gap-1.5 rounded-full border px-3.5 text-[13px] transition-colors",
                 active
-                  ? "border-foreground bg-foreground text-white"
+                  ? "border-foreground bg-foreground text-ink-foreground"
                   : "border-input bg-card hover:border-foreground",
               )}
             >
               {v.label}
-              <span className={cn("font-mono", active ? "text-white/70" : "text-muted-foreground")}>
+              <span
+                className={cn(
+                  "font-mono",
+                  active ? "text-ink-foreground/70" : "text-muted-foreground",
+                )}
+              >
                 {count}
               </span>
             </button>
@@ -226,12 +231,13 @@ function ManageOrderDialog({ order, onClose }: { order: Order; onClose: () => vo
             <div className="border-t border-border pt-2">
               <dt className="text-muted-foreground">Deliver to</dt>
               <dd className="m-0 mt-0.5 text-foreground">
+                {order.addressInfo.label && (
+                  <span className="block font-medium">{order.addressInfo.label}</span>
+                )}
                 {order.addressInfo.address}, {order.addressInfo.city}
                 {order.addressInfo.phone && ` · ${formatPhone(order.addressInfo.phone)}`}
-                {order.addressInfo.notes && (
-                  <span className="block text-muted-foreground">
-                    Notes: {order.addressInfo.notes}
-                  </span>
+                {orderNotes(order) && (
+                  <span className="block text-muted-foreground">Notes: {orderNotes(order)}</span>
                 )}
               </dd>
             </div>

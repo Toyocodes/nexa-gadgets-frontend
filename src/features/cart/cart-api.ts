@@ -1,5 +1,5 @@
 import { baseApi, notFoundAs } from "@/lib/api/base-api";
-import type { ApiEnvelope, Cart } from "@/types/api";
+import type { ApiEnvelope, Cart, MergeCartResponse } from "@/types/api";
 
 const EMPTY_CART: Cart = { _id: "", userId: "", items: [] };
 
@@ -19,6 +19,14 @@ export const cartApi = baseApi.injectEndpoints({
     addToCart: build.mutation<unknown, { userId: string; productId: string; quantity: number }>({
       query: (body) => ({ url: "/shop/cart/add", method: "POST", body }),
       invalidatesTags: ["Cart"],
+    }),
+
+    /** Moves a guest's items into the account; useMergeGuestCart writes the result to the cache. */
+    mergeCart: build.mutation<
+      MergeCartResponse,
+      { items: { productId: string; quantity: number }[] }
+    >({
+      query: (body) => ({ url: "/shop/cart/merge", method: "POST", body }),
     }),
 
     updateCartQuantity: build.mutation<
@@ -66,6 +74,7 @@ export const cartApi = baseApi.injectEndpoints({
 export const {
   useGetCartQuery,
   useAddToCartMutation,
+  useMergeCartMutation,
   useUpdateCartQuantityMutation,
   useRemoveFromCartMutation,
 } = cartApi;

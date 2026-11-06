@@ -8,6 +8,22 @@
       name="description"
       content="Genuine phones, laptops and audio with manufacturer warranty and 7-day returns. Lagos delivery or store pickup, paid securely by bank transfer."
     />
+    <script>
+      // Apply the theme before first paint so dark mode never flashes white (see src/lib/theme.ts).
+      (function () {
+        var stored = null;
+        try {
+          stored = localStorage.getItem("nexa:theme");
+        } catch (e) {}
+        var dark =
+          stored === "dark" ||
+          (stored !== "light" && matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) {
+          document.documentElement.classList.add("dark");
+          document.querySelector('meta[name="theme-color"]').setAttribute("content", "#0f1013");
+        }
+      })();
+    </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preconnect" href="https://res.cloudinary.com" />
     <title>Nexa Gadgets — Genuine gadgets. Fair prices.</title>

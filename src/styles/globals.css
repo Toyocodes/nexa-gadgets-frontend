@@ -3,14 +3,17 @@
 @import "@fontsource-variable/geist";
 @import "@fontsource-variable/geist-mono";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 /*
  * Design tokens for the "studio" look. Every value comes from the redesign
  * canvas. Components use the semantic names (bg-tile, text-ink-2…), never raw
- * hex codes, so a dark theme only has to redefine these variables.
+ * hex codes, so the dark theme below only has to redefine these variables.
  */
 :root {
   --background: #f6f6f3; /* page */
   --foreground: #0d0e12; /* ink */
+  --ink-foreground: #ffffff; /* text on ink-coloured fills */
   --ink-2: #3a3d45; /* body copy */
   --muted-foreground: #61646c; /* secondary copy */
   --subtle: #9a9ca3; /* placeholder icons */
@@ -20,7 +23,8 @@
   --popover: #ffffff;
   --popover-foreground: #0d0e12;
 
-  --tile: #eeeeea; /* product photo tile — white-background photos blend in */
+  --tile: #eeeeea; /* panels and skeletons */
+  --photo: #eeeeea; /* product photo tile — white-background photos blend in */
   --muted: #f1f1ee; /* search field, chips, input addons */
   --secondary: #f1f1ee;
   --secondary-foreground: #0d0e12;
@@ -38,12 +42,15 @@
   --primary-tint: #f5f7ff; /* selected radio card */
   --primary-wash: #dde3ff; /* laptops hero card */
   --ring: #2340f5;
+  --chart-bar: #2340f5;
+  --chart-bar-hover: #1a31c4;
 
   --success: #14794a;
   --success-soft: #e8f4ee;
   --warning: #8a5300;
   --warning-soft: #fff1d6;
   --destructive: #c1272d;
+  --destructive-foreground: #ffffff;
 
   /* Dark surfaces: utility bar, admin sidebar, sign-up panel */
   --night: #0d0e12;
@@ -55,12 +62,68 @@
   --night-accent: #8ea0ff;
 }
 
+/*
+ * The design has no dark version, so these are derived from it. Primary is
+ * lightened so it stays readable as text on dark surfaces, which means text on
+ * primary buttons turns dark. --photo stays light on purpose: supplier photos
+ * have white backgrounds that only blend into a light tile.
+ */
+.dark {
+  color-scheme: dark;
+
+  --background: #0f1013;
+  --foreground: #f1f1ed;
+  --ink-foreground: #0f1013;
+  --ink-2: #c8cad0;
+  --muted-foreground: #a0a3ab;
+  --subtle: #6f727b;
+
+  --card: #17181c;
+  --card-foreground: #f1f1ed;
+  --popover: #1d1e23;
+  --popover-foreground: #f1f1ed;
+
+  --tile: #1d1e23;
+  --photo: #e4e4df;
+  --muted: #232429;
+  --secondary: #232429;
+  --secondary-foreground: #f1f1ed;
+  --accent: #232429;
+  --accent-foreground: #f1f1ed;
+
+  --border: #2b2d33;
+  --input: #3f414a;
+  --border-strong: #5b5e66;
+
+  --primary: #8a9bff;
+  --primary-hover: #a5b2ff;
+  --primary-foreground: #0d0e12;
+  --primary-soft: #232b57;
+  --primary-tint: #171b33;
+  --primary-wash: #1f2750;
+  --ring: #8a9bff;
+  /* Validated separately: --primary is too light for chart marks on dark. */
+  --chart-bar: #6478f0;
+  --chart-bar-hover: #7b8df5;
+
+  --success: #5bd39a;
+  --success-soft: #10291d;
+  --warning: #f2b654;
+  --warning-soft: #2f2310;
+  --destructive: #ff8085;
+  --destructive-foreground: #1c0506;
+
+  --night: #08090b;
+  --night-2: #24262c;
+}
+
 @theme inline {
   --font-sans: "Geist Variable", system-ui, sans-serif;
   --font-mono: "Geist Mono Variable", ui-monospace, monospace;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-ink-foreground: var(--ink-foreground);
   --color-ink-2: var(--ink-2);
   --color-muted-foreground: var(--muted-foreground);
   --color-subtle: var(--subtle);
@@ -69,6 +132,7 @@
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
   --color-tile: var(--tile);
+  --color-photo: var(--photo);
   --color-muted: var(--muted);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
@@ -89,6 +153,7 @@
   --color-warning: var(--warning);
   --color-warning-soft: var(--warning-soft);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
   --color-night: var(--night);
   --color-night-2: var(--night-2);
   --color-night-foreground: var(--night-foreground);

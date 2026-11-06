@@ -2,6 +2,7 @@ import { Link } from "react-router";
 import { paths } from "@/app/paths";
 import { Logo } from "@/components/brand/logo";
 import { AUDIO_CATEGORIES } from "@/config/catalog";
+import { ThemeSwitcher } from "./theme-switcher";
 
 const columns = [
   {
@@ -61,8 +62,11 @@ export function SiteFooter() {
           </nav>
         ))}
       </div>
-      <div className="container-page flex flex-wrap justify-between gap-3 border-t border-border pt-5 pb-8 text-[13px] text-muted-foreground">
-        <span>© {new Date().getFullYear()} Nexa Gadgets</span>
+      <div className="container-page flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5 pb-8 text-[13px] text-muted-foreground">
+        <span className="flex items-center gap-4">
+          © {new Date().getFullYear()} Nexa Gadgets
+          <ThemeSwitcher />
+        </span>
         <span className="flex gap-4">
           <Link to={paths.terms} className="text-muted-foreground hover:text-foreground">
             Terms

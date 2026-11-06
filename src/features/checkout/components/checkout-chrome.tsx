@@ -88,7 +88,7 @@ export function CheckoutSteps({ current }: { current: 0 | 1 | 2 }) {
             <span
               className={cn(
                 "flex size-6 items-center justify-center rounded-full text-xs",
-                i <= current ? "bg-foreground text-white" : "border border-input",
+                i <= current ? "bg-foreground text-ink-foreground" : "border border-input",
               )}
             >
               {i + 1}

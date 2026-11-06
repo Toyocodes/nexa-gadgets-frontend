@@ -4,6 +4,7 @@ import { specChips } from "./product-specs";
 import { listingTitle, priceChipLabel, type ListingFilters } from "./use-listing-filters";
 
 const none: ListingFilters = {
+  q: "",
   category: [],
   brand: [],
   inStock: false,

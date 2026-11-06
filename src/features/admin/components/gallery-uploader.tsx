@@ -71,7 +71,7 @@ export function GalleryUploader({
           {value.map((url, i) => (
             <li
               key={url}
-              className="group relative aspect-square overflow-hidden rounded-lg bg-tile"
+              className="group relative aspect-square overflow-hidden rounded-lg bg-photo"
             >
               <img
                 src={url}
@@ -79,7 +79,7 @@ export function GalleryUploader({
                 className="size-full object-contain p-2 mix-blend-multiply"
               />
               {i === 0 && (
-                <span className="absolute bottom-1.5 left-1.5 rounded-full bg-foreground px-2 py-0.5 text-[11px] font-semibold text-white">
+                <span className="absolute bottom-1.5 left-1.5 rounded-full bg-night px-2 py-0.5 text-[11px] font-semibold text-white">
                   Cover
                 </span>
               )}

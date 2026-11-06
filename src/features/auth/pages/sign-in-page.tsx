@@ -10,11 +10,10 @@ import { Field } from "@/components/form/field";
 import { fieldAria } from "@/components/form/field-aria";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { getErrorMessage, isRateLimited } from "@/lib/api/errors";
+import { getErrorMessage, isRateLimited, serverErrorField } from "@/lib/api/errors";
 import { useLoginMutation, useRequestMagicLinkMutation } from "../auth-api";
 import { AuthHeading, AuthShell } from "../components/auth-shell";
 import { PasswordInput } from "../components/password-input";
-import { fieldForMessage } from "../server-errors";
 import { useCooldown } from "../use-cooldown";
 
 const schema = z.object({
@@ -44,7 +43,7 @@ export default function SignInPage() {
       const res = await login(values).unwrap();
       // Wrong email/password come back as 200 { success: false }.
       if (!res.success) {
-        const field = fieldForMessage(res.message, ["email", "password"] as const);
+        const field = serverErrorField(res, ["email", "password"] as const);
         if (field) form.setError(field, { message: res.message });
         else setFormError(res.message);
       }

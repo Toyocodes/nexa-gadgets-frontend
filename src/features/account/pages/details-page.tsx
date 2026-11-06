@@ -15,9 +15,8 @@ import {
   useUpdateProfileMutation,
 } from "@/features/auth/auth-api";
 import { PasswordInput, PasswordStrength } from "@/features/auth/components/password-input";
-import { fieldForMessage } from "@/features/auth/server-errors";
 import { useCooldown } from "@/features/auth/use-cooldown";
-import { getErrorMessage, isRateLimited } from "@/lib/api/errors";
+import { getErrorMessage, isRateLimited, serverErrorField } from "@/lib/api/errors";
 import { formatDate } from "@/lib/format";
 import type { Profile } from "@/types/api";
 
@@ -89,7 +88,7 @@ function ProfileForm({ profile }: { profile: Profile }) {
       toast.success(res.message || "Account updated");
     } catch (err) {
       const message = getErrorMessage(err);
-      const field = fieldForMessage(message, ["userName", "email", "currentPassword"] as const);
+      const field = serverErrorField(err, ["userName", "email", "currentPassword"] as const);
       if (field) form.setError(field, { message });
       else toast.error(message);
     }
@@ -183,7 +182,7 @@ function PasswordForm() {
       if (isRateLimited(err)) cooldown.start();
       const message = getErrorMessage(err);
       form.setError(
-        fieldForMessage(message, ["currentPassword", "newPassword"] as const) ?? "currentPassword",
+        serverErrorField(err, ["currentPassword", "newPassword"] as const) ?? "currentPassword",
         { message },
       );
     }

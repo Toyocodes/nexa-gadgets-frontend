@@ -1,10 +1,12 @@
 /**
- * Guests can tap "+" or the heart on any product card, but cart and wishlist
- * need an account. We remember what they tried to do, send them to sign in,
- * and finish the action once they're back (see useResumePendingIntent).
+ * Guests can tap the heart on any product card, but the wishlist needs an
+ * account. We remember what they tried to do, send them to sign in, and finish
+ * the action once they're back (see useResumePendingIntent).
  */
-export type PendingIntent =
-  { type: "cart"; productId: string; quantity: number } | { type: "wishlist"; productId: string };
+export interface PendingIntent {
+  type: "wishlist";
+  productId: string;
+}
 
 const KEY = "nexa:pending-intent";
 

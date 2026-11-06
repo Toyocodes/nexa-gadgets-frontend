@@ -2,6 +2,7 @@ import { ExternalLink, LogOut } from "lucide-react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router";
 import { paths } from "@/app/paths";
 import { Logo } from "@/components/brand/logo";
+import { ThemeSwitcher } from "@/components/layout/theme-switcher";
 import { useLogoutMutation } from "@/features/auth/auth-api";
 import { cn } from "@/lib/utils";
 
@@ -58,6 +59,9 @@ export default function AdminLayout() {
             ))}
           </div>
           <div className="mt-auto hidden flex-col gap-1 border-t border-night-2 pt-3 md:flex">
+            <div className="px-3 pb-2">
+              <ThemeSwitcher night />
+            </div>
             <Link
               to={paths.home}
               className="flex h-11 items-center gap-2 rounded-md px-3 text-[15px] text-night-soft no-underline hover:text-white"

@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/dialog";
 import { selectUser } from "@/features/auth/auth-slice";
 import {
+  ADDRESS_FIELDS,
   addressSchema,
   formatPhone,
   toAddressForm,
@@ -39,7 +40,7 @@ import {
   useUpdateAddressMutation,
 } from "@/features/checkout/checkout-api";
 import { AddressFields } from "@/features/checkout/components/address-fields";
-import { getErrorMessage } from "@/lib/api/errors";
+import { getErrorMessage, serverErrorField } from "@/lib/api/errors";
 import type { Address } from "@/types/api";
 
 export default function AddressesPage() {
@@ -78,8 +79,14 @@ export default function AddressesPage() {
               className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-5"
             >
               <div>
-                <div className="text-[15px] font-semibold">{a.address}</div>
+                <div className="text-[15px] font-semibold">{a.label || a.address}</div>
                 <div className="mt-1 text-sm leading-normal text-ink-2">
+                  {a.label && (
+                    <>
+                      {a.address}
+                      <br />
+                    </>
+                  )}
                   {[a.city, a.pincode].filter(Boolean).join(", ")}
                   <br />
                   {formatPhone(a.phone)}
@@ -123,7 +130,7 @@ export default function AddressesPage() {
             <AlertDialogCancel>Keep it</AlertDialogCancel>
             <AlertDialogAction
               disabled={removing}
-              className="bg-destructive text-white hover:bg-destructive/90"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={async () => {
                 if (!deleting) return;
                 try {
@@ -169,7 +176,10 @@ function AddressDialog({
       toast.success(address ? "Address updated" : "Address saved");
       onClose();
     } catch (e) {
-      setError(getErrorMessage(e));
+      const message = getErrorMessage(e);
+      const field = serverErrorField(e, ADDRESS_FIELDS);
+      if (field) form.setError(field, { message });
+      else setError(message);
     }
   });
 

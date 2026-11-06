@@ -32,7 +32,7 @@ function CartButton() {
     <button
       type="button"
       onClick={() => dispatch(cartOpened())}
-      className="flex h-11 items-center gap-2 rounded-full bg-foreground px-4 text-sm font-medium text-white transition-colors hover:bg-foreground/85"
+      className="flex h-11 items-center gap-2 rounded-full bg-foreground px-4 text-sm font-medium text-ink-foreground transition-colors hover:bg-foreground/85"
     >
       <ShoppingBag size={18} strokeWidth={1.8} aria-hidden="true" />
       Cart · {count}
@@ -52,7 +52,7 @@ function MobileCartButton() {
     >
       <ShoppingBag size={22} strokeWidth={1.8} aria-hidden="true" />
       {count > 0 && (
-        <span className="absolute top-1 right-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-primary px-1 text-[11px] font-semibold text-white">
+        <span className="absolute top-1 right-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-primary px-1 text-[11px] font-semibold text-primary-foreground">
           {count}
         </span>
       )}
@@ -160,7 +160,7 @@ export function MobileCategoryChips() {
             to={chip.to}
             className={cn(
               "flex h-9 flex-none items-center rounded-full px-3.5 text-sm font-medium no-underline",
-              on ? "bg-foreground text-white" : "border border-input text-foreground",
+              on ? "bg-foreground text-ink-foreground" : "border border-input text-foreground",
             )}
           >
             {chip.label}

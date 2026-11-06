@@ -4,6 +4,8 @@ import type { ApiEnvelope, Product, ProductPage, ProductQuery, Review } from "@/
 /** Serialise filters the way GET /shop/products/get expects them. */
 export function toProductSearchParams(q: ProductQuery) {
   const params = new URLSearchParams();
+  if (q.q) params.set("q", q.q);
+  if (q.ids?.length) params.set("ids", q.ids.join(","));
   if (q.category?.length) params.set("category", q.category.join(","));
   if (q.brand?.length) params.set("brand", q.brand.join(","));
   if (q.minPrice != null) params.set("minPrice", String(q.minPrice));
@@ -42,12 +44,6 @@ export const catalogApi = baseApi.injectEndpoints({
       providesTags: (_r, _e, id) => [{ type: "Product", id }],
     }),
 
-    searchProducts: build.query<Product[], string>({
-      query: (keyword) => `/shop/search/${encodeURIComponent(keyword)}`,
-      transformResponse: (res: ApiEnvelope<Product[]>) => res.data,
-      providesTags: ["ProductList"],
-    }),
-
     getReviews: build.query<Review[], string>({
       query: (productId) => `/shop/review/${productId}`,
       transformResponse: (res: ApiEnvelope<Review[]>) => res.data,
@@ -73,7 +69,6 @@ export const {
   useGetProductsQuery,
   useBrowseProductsInfiniteQuery,
   useGetProductQuery,
-  useSearchProductsQuery,
   useGetReviewsQuery,
   useAddReviewMutation,
 } = catalogApi;

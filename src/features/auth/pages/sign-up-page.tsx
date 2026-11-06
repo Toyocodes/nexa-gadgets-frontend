@@ -10,11 +10,10 @@ import { fieldAria } from "@/components/form/field-aria";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { getErrorMessage, isRateLimited } from "@/lib/api/errors";
+import { getErrorMessage, isRateLimited, serverErrorField } from "@/lib/api/errors";
 import { useRegisterMutation } from "../auth-api";
 import { AuthHeading, AuthShell } from "../components/auth-shell";
 import { PasswordInput, PasswordStrength } from "../components/password-input";
-import { fieldForMessage } from "../server-errors";
 import { useCooldown } from "../use-cooldown";
 
 const schema = z.object({
@@ -52,7 +51,7 @@ export default function SignUpPage() {
       const res = await register(values).unwrap();
       // Taken username/email come back as 200 { success: false }.
       if (!res.success) {
-        const field = fieldForMessage(res.message, ["userName", "email", "password"] as const);
+        const field = serverErrorField(res, ["userName", "email", "password"] as const);
         if (field) form.setError(field, { message: res.message });
         else setFormError(res.message);
       }
@@ -60,7 +59,7 @@ export default function SignUpPage() {
     } catch (err) {
       if (isRateLimited(err)) cooldown.start();
       const message = getErrorMessage(err);
-      const field = fieldForMessage(message, ["userName", "email", "password"] as const);
+      const field = serverErrorField(err, ["userName", "email", "password"] as const);
       if (field) form.setError(field, { message });
       else setFormError(message);
     }

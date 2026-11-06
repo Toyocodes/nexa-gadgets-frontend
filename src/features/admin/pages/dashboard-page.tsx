@@ -118,7 +118,7 @@ export default function DashboardPage() {
             className={cn(
               "h-9 rounded-full border px-3.5 text-[13px] transition-colors",
               range === r
-                ? "border-foreground bg-foreground text-white"
+                ? "border-foreground bg-foreground text-ink-foreground"
                 : "border-input bg-card hover:border-foreground",
             )}
           >
@@ -272,10 +272,10 @@ function DailyBars({
         />
         <Bar
           dataKey={dataKey}
-          fill="var(--primary)"
+          fill="var(--chart-bar)"
           radius={[4, 4, 0, 0]}
           maxBarSize={24}
-          activeBar={{ fill: "var(--primary-hover)" }}
+          activeBar={{ fill: "var(--chart-bar-hover)" }}
         />
       </BarChart>
     </ResponsiveContainer>

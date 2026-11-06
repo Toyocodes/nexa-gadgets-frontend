@@ -11,7 +11,7 @@ export const paths = {
   home: "/",
   products: (query?: Record<string, string | undefined>) => withQuery("/products", query),
   product: (id: string) => `/products/${id}`,
-  search: (q?: string) => withQuery("/search", { q }),
+  search: (q: string) => withQuery("/products", { q }),
   checkout: "/checkout",
   paymentReturn: "/checkout/payment",
 
