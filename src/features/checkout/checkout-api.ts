@@ -1,4 +1,4 @@
-import { baseApi, notFoundAs } from "@/lib/api/base-api";
+import { baseApi } from "@/lib/api/base-api";
 import type {
   Address,
   AddressInput,
@@ -71,13 +71,9 @@ export const checkoutApi = baseApi.injectEndpoints({
     }),
 
     getOrders: build.query<Order[], string>({
-      // No orders yet comes back as 404.
-      queryFn: (userId, _api, _opts, baseQuery) =>
-        notFoundAs(baseQuery(`/shop/order/list/${userId}`), [], (b) =>
-          [...(b as ApiEnvelope<Order[]>).data].sort(
-            (a, z) => +new Date(z.orderDate) - +new Date(a.orderDate),
-          ),
-        ),
+      query: (userId) => `/shop/order/list/${userId}`,
+      transformResponse: (res: ApiEnvelope<Order[]>) =>
+        [...res.data].sort((a, z) => +new Date(z.orderDate) - +new Date(a.orderDate)),
       providesTags: ["Order"],
     }),
 

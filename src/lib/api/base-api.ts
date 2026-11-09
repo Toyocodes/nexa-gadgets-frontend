@@ -56,16 +56,3 @@ export const baseApi = createApi({
   ],
   endpoints: () => ({}),
 });
-
-/** Turn a 404 "nothing here yet" into an empty result instead of an error. */
-export async function notFoundAs<T>(
-  request:
-    | PromiseLike<{ data?: unknown; error?: FetchBaseQueryError }>
-    | { data?: unknown; error?: FetchBaseQueryError },
-  empty: T,
-  pick: (body: unknown) => T,
-): Promise<{ data: T } | { error: FetchBaseQueryError }> {
-  const res = await request;
-  if (res.error) return res.error.status === 404 ? { data: empty } : { error: res.error };
-  return { data: pick(res.data) };
-}

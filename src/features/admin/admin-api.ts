@@ -1,4 +1,4 @@
-import { baseApi, notFoundAs } from "@/lib/api/base-api";
+import { baseApi } from "@/lib/api/base-api";
 import type {
   Analytics,
   ApiEnvelope,
@@ -31,8 +31,6 @@ export const adminApi = baseApi.injectEndpoints({
           url: "/admin/products/upload-image",
           method: "POST",
           body,
-          // A failed upload still answers 200, with `success: false`.
-          validateStatus: (res, json: { success?: boolean }) => res.ok && json?.success !== false,
         };
       },
       transformResponse: (res: { result: { secure_url: string } }) => res.result.secure_url,
@@ -54,12 +52,9 @@ export const adminApi = baseApi.injectEndpoints({
     }),
 
     getAdminOrders: build.query<Order[], void>({
-      queryFn: (_arg, _api, _opts, baseQuery) =>
-        notFoundAs(baseQuery("/admin/orders/get"), [], (b) =>
-          [...(b as ApiEnvelope<Order[]>).data].sort(
-            (a, z) => +new Date(z.orderDate) - +new Date(a.orderDate),
-          ),
-        ),
+      query: () => "/admin/orders/get",
+      transformResponse: (res: ApiEnvelope<Order[]>) =>
+        [...res.data].sort((a, z) => +new Date(z.orderDate) - +new Date(a.orderDate)),
       providesTags: ["AdminOrder"],
     }),
 
