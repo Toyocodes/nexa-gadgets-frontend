@@ -120,7 +120,8 @@ export interface CartItem {
 }
 
 export interface Cart {
-  _id: string;
+  /** `null` until the user first adds something. */
+  _id: string | null;
   userId: string;
   items: CartItem[];
 }

@@ -1,18 +1,12 @@
-import { baseApi, notFoundAs } from "@/lib/api/base-api";
+import { baseApi } from "@/lib/api/base-api";
 import type { ApiEnvelope, Cart, MergeCartResponse } from "@/types/api";
-
-const EMPTY_CART: Cart = { _id: "", userId: "", items: [] };
 
 export const cartApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
     getCart: build.query<Cart, string>({
-      // A user who never added anything has no cart document (404) — that's an empty cart.
-      queryFn: (userId, _api, _opts, baseQuery) =>
-        notFoundAs(
-          baseQuery(`/shop/cart/get/${userId}`),
-          EMPTY_CART,
-          (b) => (b as ApiEnvelope<Cart>).data,
-        ),
+      // A user who never added anything gets an empty cart with `_id: null`.
+      query: (userId) => `/shop/cart/get/${userId}`,
+      transformResponse: (res: ApiEnvelope<Cart>) => res.data,
       providesTags: ["Cart"],
     }),
 

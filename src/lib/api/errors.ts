@@ -30,7 +30,7 @@ export function getErrorMessage(
 
 /**
  * The input an API error is about, when it's one the form has. `source` is a
- * thrown error, or a 200 { success: false } body (login and register use those).
+ * thrown error, or a response body that carries a `field`.
  */
 export function serverErrorField<F extends string>(
   source: unknown,
