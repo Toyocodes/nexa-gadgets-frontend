@@ -40,17 +40,15 @@ export default function SignInPage() {
   const onSubmit = form.handleSubmit(async (values) => {
     setFormError(null);
     try {
-      const res = await login(values).unwrap();
-      // Wrong email/password come back as 200 { success: false }.
-      if (!res.success) {
-        const field = serverErrorField(res, ["email", "password"] as const);
-        if (field) form.setError(field, { message: res.message });
-        else setFormError(res.message);
-      }
+      await login(values).unwrap();
       // On success the GuestOnly guard redirects (admins → dashboard).
     } catch (err) {
       if (isRateLimited(err)) cooldown.start();
-      setFormError(getErrorMessage(err));
+      // Unknown email / wrong password are 401s that name the field.
+      const message = getErrorMessage(err);
+      const field = serverErrorField(err, ["email", "password"] as const);
+      if (field) form.setError(field, { message });
+      else setFormError(message);
     }
   });
 

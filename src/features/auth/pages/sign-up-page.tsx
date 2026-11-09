@@ -48,16 +48,11 @@ export default function SignUpPage() {
   const onSubmit = form.handleSubmit(async (values) => {
     setFormError(null);
     try {
-      const res = await register(values).unwrap();
-      // Taken username/email come back as 200 { success: false }.
-      if (!res.success) {
-        const field = serverErrorField(res, ["userName", "email", "password"] as const);
-        if (field) form.setError(field, { message: res.message });
-        else setFormError(res.message);
-      }
+      await register(values).unwrap();
       // Success signs the user in; the guard sends them on (to their account by default).
     } catch (err) {
       if (isRateLimited(err)) cooldown.start();
+      // Taken username/email are 409s; invalid input is 400. Both name the field.
       const message = getErrorMessage(err);
       const field = serverErrorField(err, ["userName", "email", "password"] as const);
       if (field) form.setError(field, { message });
